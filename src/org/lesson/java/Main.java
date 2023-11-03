@@ -1,6 +1,8 @@
 package org.lesson.java;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -51,6 +53,7 @@ public class Main {
 
                         System.out.println(countryID + " " + countryName + " " + regionName + " " + continentName);
                     }
+
                 } catch (SQLException e) {
                     System.out.println("Unable to execute quey");
                     e.printStackTrace();
@@ -59,6 +62,118 @@ public class Main {
                 System.out.println("Unable to prepare statement");
                 e.printStackTrace();
             }
+
+            System.out.println("Enter the ID of the state you want more information about");
+            int searchID = Integer.parseInt(scanner.nextLine());
+
+
+            String countryNameQuery = "select c.name " +
+                    "from countries c " +
+                    "where c.country_id = ?";
+
+            try(PreparedStatement pslanguage = con.prepareStatement(countryNameQuery)) {
+
+                // Effettuo il binding dei parametri
+
+                pslanguage.setInt(1, searchID);
+
+                // Eseguo il prepared statement
+
+                try(ResultSet rsname = pslanguage.executeQuery()) {
+
+                    while(rsname.next()) {
+                        String language = rsname.getString("name");
+
+                        System.out.println("Details for country: " + language);
+                    }
+
+                } catch (SQLException e) {
+                    System.out.println("Unable to execute quey");
+                    e.printStackTrace();
+                }
+            } catch (SQLException e) {
+                System.out.println("Unable to prepare statement");
+                e.printStackTrace();
+            }
+
+            String languageQuery = "select l.language " +
+                    "from country_languages cl " +
+                    "join languages l on cl.language_id = l.language_id " +
+                    "where cl.country_id = ?;";
+
+            try(PreparedStatement pslanguage = con.prepareStatement(languageQuery)) {
+
+                // Effettuo il binding dei parametri
+
+               pslanguage.setInt(1, searchID);
+
+                // Eseguo il prepared statement
+
+                try(ResultSet rslanguage = pslanguage.executeQuery()) {
+
+                    List<String> languages = new ArrayList<>();
+
+                    System.out.print("Languages: ");
+                    while(rslanguage.next()) {
+                        languages.add(rslanguage.getString("language"));
+                    }
+
+                    for (int i = 0; i < languages.size(); i++) {
+                        System.out.print(languages.get(i));
+                        if (i < languages.size() -1) {
+                            System.out.print(", ");
+                        } else {
+                            System.out.println();
+                        }
+                    }
+
+                } catch (SQLException e) {
+                    System.out.println("Unable to execute quey");
+                    e.printStackTrace();
+                }
+            } catch (SQLException e) {
+                System.out.println("Unable to prepare statement");
+                e.printStackTrace();
+            }
+
+            String statQuery = "select cs.`year`, cs.population, cs.gdp " +
+                    "from country_stats cs " +
+                    "where cs.country_id = ? " +
+                    "order by `year` desc " +
+                    "limit 1;";
+
+            try(PreparedStatement psStat = con.prepareStatement(statQuery)) {
+
+                // Effettuo il binding dei parametri
+
+                psStat.setInt(1, searchID);
+
+                // Eseguo il prepared statement
+
+                try(ResultSet rsStat = psStat.executeQuery()) {
+
+                    System.out.println("Most recent stats");
+                    while(rsStat.next()) {
+                        int year = rsStat.getInt("year");
+                        int population = rsStat.getInt("population");
+                        long gdp = rsStat.getLong("gdp");
+
+                        System.out.println("Year: " + year);
+                        System.out.println("Population: " + population);
+                        System.out.println("GDP: " + gdp);
+
+                    }
+
+                } catch (SQLException e) {
+                    System.out.println("Unable to execute quey");
+                    e.printStackTrace();
+                }
+            } catch (SQLException e) {
+                System.out.println("Unable to prepare statement");
+                e.printStackTrace();
+            }
+
+
         } catch (SQLException e) {
             System.out.println("Unable to connect to database");
             e.printStackTrace();
